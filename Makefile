@@ -6,7 +6,7 @@ help:
 ELEPHANT_GPU?=all
 ELEPHANT_WORKSPACE?=${PWD}/workspace
 ELEPHANT_IMAGE_NAME?=elephant-server:0.4.3
-ELEPHANT_NVIDIA_GID?=$$(ls -n /dev/nvidia0 2>/dev/null | awk '{print $$4}')
+#ELEPHANT_NVIDIA_GID?=$$(ls -n /dev/nvidia0 2>/dev/null | awk '{print $$4}')
 ELEPHANT_DOCKER?=docker
 
 rebuild:
@@ -27,7 +27,7 @@ stop:
 
 warmup:
 	$(eval GPU_ARG:=$(shell \
-	if [ -n "$(ELEPHANT_NVIDIA_GID)" ] && [ -n "$(ELEPHANT_GPU)" ]; then \
+	if [ -n "$(ELEPHANT_GPU)" ]; then \
 		VAR=$$(echo --gpus '"device=$(ELEPHANT_GPU)"'); \
 	fi;\
 	echo $$VAR))
@@ -39,12 +39,12 @@ warmup:
 
 launch: warmup
 	$(ELEPHANT_DOCKER) run -it --rm $(GPU_ARG) --shm-size=8g -v $(ELEPHANT_WORKSPACE):/workspace -p 8080:80 -p 5672:5672 \
-	-e LOCAL_UID=$(shell id -u) -e LOCAL_GID=$(shell id -g) -e NVIDIA_GID=$(ELEPHANT_NVIDIA_GID) \
+	-e LOCAL_UID=$(shell id -u) -e LOCAL_GID=$(shell id -g) \
 	$(ELEPHANT_IMAGE_NAME)
 
 bash: warmup
 	$(ELEPHANT_DOCKER) run -it --rm $(GPU_ARG) --shm-size=8g -v $(ELEPHANT_WORKSPACE):/workspace \
-	-e LOCAL_UID=$(shell id -u) -e LOCAL_GID=$(shell id -g) -e AS_LOCAL_USER=1 -e NVIDIA_GID=$(ELEPHANT_NVIDIA_GID) \
+	-e LOCAL_UID=$(shell id -u) -e LOCAL_GID=$(shell id -g) -e AS_LOCAL_USER=1 \
 	$(ELEPHANT_IMAGE_NAME) /bin/bash
 
 bashroot: warmup
